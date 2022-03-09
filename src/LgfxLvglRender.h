@@ -1,3 +1,6 @@
+#ifndef LGFX_LVGL_RENDER_H_
+#define LGFX_LVGL_RENDER_H_
+
 #include <LovyanGFX.h>
 #include <lvgl.h>
 
@@ -12,3 +15,5 @@ typedef struct _lv_font_t_lgfx : lv_font_t {
 } lv_font_t_lgfx;
 
 void lgfx_lv_disp_drv_register(lgfx::LGFXBase *lcd);
+
+#endif
