@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tcc": "cpp",
+			"ft2build.h": "c"
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"platformio.platformio-ide"
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+		]
+	}
+}
