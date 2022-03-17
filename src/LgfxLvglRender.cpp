@@ -116,6 +116,7 @@ const uint8_t * lgfx_font_get_glyph_bitmap_cb(const lv_font_t * font, uint32_t u
 
     // 描画用スプライトの大きさが、今から描画する文字の大きさよりも小さいときは拡張する
     if (lgfx_font_glyph_sprite.width() < metric.width || lgfx_font_glyph_sprite.height() < metric.height) {
+        lgfx_font_glyph_sprite.setColorDepth(lgfx::color_depth_t::grayscale_8bit);
         lgfx_font_glyph_sprite.createSprite(metric.width, metric.height);
     }
 
@@ -144,7 +145,6 @@ const uint8_t * lgfx_font_get_glyph_bitmap_cb(const lv_font_t * font, uint32_t u
 void lgfx_lv_disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
     //ESP_LOGD("lgfx_lvgl", "lgfx_lv_disp_flush_cb:%d, %d, %d, %d", area->x1, area->y1, area->x2, area->y2);
-    size_t len = lv_area_get_size(area);
 
     if (! lgfx_lv_disp_flush_cb_in_progress) {
         lgfx_lv_disp_flush_cb_in_progress = true;
@@ -152,9 +152,9 @@ void lgfx_lv_disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_
     }
 
     #if LV_COLOR_16_SWAP
-        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::swap565_t *)color_p);
+        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::swap565_t *)&color_p->full);
     #else
-        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::rgb565_t *)color_p);
+        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::rgb565_t *)&color_p->full);
     #endif
 
     if (lv_disp_flush_is_last(disp)) {
