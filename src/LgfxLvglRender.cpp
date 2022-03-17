@@ -132,11 +132,7 @@ const uint8_t * lgfx_font_get_glyph_bitmap_cb(const lv_font_t * font, uint32_t u
     lgfx_font_glyph_sprite.drawChar(utf16_letter, 0 - metric.x_offset, 0 - metric.y_offset);
 
     // 描画した文字をグレースケールに変換しつつ、LVGL用バッファに入れる
-    for (int y = 0; y < metric.height; y++) {
-        for (int x = 0; x < metric.width; x++) {
-            lgfx_font_glyph_buf[(y * metric.width) + x] = ((lgfx::grayscale_t)lgfx_font_glyph_sprite.readPixel(x, y)).raw;
-        }
-    }
+    lgfx_font_glyph_sprite.readRect(0, 0, metric.width, metric.height, (lgfx::grayscale_t *)lgfx_font_glyph_buf);
 
     // ※LVGLは文字の幅と高さの分しかメモリを見ないので、余白をゼロクリアする必要は無い
     return lgfx_font_glyph_buf;
