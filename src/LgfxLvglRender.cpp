@@ -30,7 +30,7 @@ static lgfx::LGFX_Sprite lgfx_font_glyph_sprite;
 // LVGLのディスプレイドライバとして使うバッファの定義
 const size_t buf_pix_count = LGFX_LVGL_RENDER_PIXEL_BUFFER_SIZE;
 static lv_disp_draw_buf_t disp_buf;
-static lv_color_t *lv_buf;
+static lv_color_t *lv_buf1, *lv_buf2;
 static bool lgfx_lv_disp_flush_cb_in_progress = false;
 static lgfx::LGFXBase *lcd;
 
@@ -147,7 +147,7 @@ const uint8_t * lgfx_font_get_glyph_bitmap_cb(const lv_font_t * font, uint32_t u
  */
 void lgfx_lv_disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
-    // ESP_LOGD("lgfx_lvgl", "lgfx_lv_disp_flush_cb");
+    //ESP_LOGD("lgfx_lvgl", "lgfx_lv_disp_flush_cb:%d, %d, %d, %d", area->x1, area->y1, area->x2, area->y2);
     size_t len = lv_area_get_size(area);
 
     if (! lgfx_lv_disp_flush_cb_in_progress) {
@@ -155,8 +155,11 @@ void lgfx_lv_disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_
         lcd->startWrite();
     }
 
-    lcd->setWindow(area->x1, area->y1, area->x2, area->y2);
-    lcd->writePixels((uint16_t *)color_p, len, true);
+    #if LV_COLOR_16_SWAP
+        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::swap565_t *)color_p);
+    #else
+        lcd->pushImageDMA(area->x1, area->y1, (area->x2 - area->x1) + 1, (area->y2 - area->y1) + 1, (lgfx::rgb565_t *)color_p);
+    #endif
 
     if (lv_disp_flush_is_last(disp)) {
         lcd->endWrite();
@@ -173,16 +176,24 @@ void lgfx_lv_disp_drv_register(lgfx::LGFXBase *lcd)
 {
     ::lcd = lcd;
 
-    if (lv_buf != NULL) {
-        free(lv_buf);
+    if (lv_buf1 != NULL) {
+        free(lv_buf1);
     }
-    lv_buf = (lv_color_t *)malloc(sizeof(lv_color_t) * buf_pix_count);
-    if (lv_buf == NULL) {
+    if (lv_buf2 != NULL) {
+        free(lv_buf2);
+    }
+    lv_buf1 = (lv_color_t *)malloc(sizeof(lv_color_t) * buf_pix_count);
+    if (lv_buf1 == NULL) {
+        ESP_LOGD("lgfx_lvgl", "Out of memory");
+        return;
+    }
+    lv_buf2 = (lv_color_t *)malloc(sizeof(lv_color_t) * buf_pix_count);
+    if (lv_buf2 == NULL) {
         ESP_LOGD("lgfx_lvgl", "Out of memory");
         return;
     }
 
-    lv_disp_draw_buf_init(&disp_buf, lv_buf, NULL, buf_pix_count);
+    lv_disp_draw_buf_init(&disp_buf, lv_buf1, lv_buf2, buf_pix_count);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
